@@ -1,7 +1,9 @@
 import { DonorCard } from "@/components/DonorCard";
 
 const AllBloodPage = async () => {
-  const res = await fetch("http://localhost:5000/all");
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/all`, {
+    cache: "no-store",
+  });
   const allBloods = await res.json();
   // if (allBlood.length === 0) {
   //   return (
