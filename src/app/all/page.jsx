@@ -17,7 +17,7 @@ const AllBloodPage = async () => {
       <h1 className="text-center text-4xl font-bold text-red-600">
         All Blood Donor Info
       </h1>
-      <div className="w-4/12 mx-auto my-6">
+      <div>
         <DonorCard allBloods={allBloods} />
       </div>
     </div>
