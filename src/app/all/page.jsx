@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { DonorCard } from "@/components/DonorCard";
 
 const AllBloodPage = async () => {
