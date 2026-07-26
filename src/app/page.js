@@ -28,7 +28,7 @@ export default async function Home() {
 
   // ✅ NEW: প্রথম ১৫টা ডেটা কেটে নেওয়া হচ্ছে (home page এ পুরো
   // লিস্ট দেখানো হবে না)
-  const previewBloods = allBloods.slice(0, 15);
+  const previewBloods = allBloods.slice(0, 6);
 
   return (
     <div className="min-h-screen bg-zinc-50 px-4 py-8 dark:bg-black sm:py-12">
@@ -65,7 +65,7 @@ export default async function Home() {
                   href="/all"
                   className="rounded-lg bg-red-600 px-6 py-3 font-semibold text-white transition hover:bg-red-700"
                 >
-                  See More Donors
+                  See All Donors
                 </Link>
               </div>
             )}
