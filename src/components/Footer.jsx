@@ -50,11 +50,16 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/add" className="transition hover:text-red-400">
+                  Add Donor
+                </Link>
+              </li>
+              <li>
                 <Link
-                  href="/add-donor"
+                  href="/favourite"
                   className="transition hover:text-red-400"
                 >
-                  Add Donor
+                  Favourite
                 </Link>
               </li>
             </ul>

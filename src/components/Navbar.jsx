@@ -22,6 +22,9 @@ export default function Navbar() {
           <li>
             <Link href="add">Add Donor </Link>
           </li>
+          <li>
+            <Link href="/favourite">Favourite </Link>
+          </li>
         </ul>
       </header>
     </nav>

@@ -14,7 +14,7 @@ const AllBloodPage = async () => {
   // console.log(allBloods);
   return (
     <div>
-      <h1 className="text-center text-4xl font-bold text-red-600">
+      <h1 className="text-center text-4xl my-6 font-bold text-red-600">
         All Blood Donor Info
       </h1>
       <div>
