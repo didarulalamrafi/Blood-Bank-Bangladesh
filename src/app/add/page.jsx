@@ -23,6 +23,39 @@ const AddDonorPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  // ✅ NEW: image preview এবং base64 data রাখার জন্য state
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageData, setImageData] = useState("");
+
+  // ✅ NEW: image file select করলে সেটাকে base64 এ কনভার্ট করা হচ্ছে,
+  // কারণ বর্তমান submit logic JSON.stringify দিয়ে পাঠাচ্ছে (multipart/form-data না)
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setImagePreview(null);
+      setImageData("");
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setError("Please select a valid image file.");
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setError("Image must be smaller than 2MB.");
+      return;
+    }
+
+    setError("");
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageData(reader.result);
+      setImagePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const donorHandler = async (e) => {
     e.preventDefault();
     setError("");
@@ -30,6 +63,11 @@ const AddDonorPage = () => {
 
     const formData = new FormData(e.target);
     const bloodInfo = Object.fromEntries(formData.entries());
+
+    // ✅ NEW: base64 image data (যদি থাকে) payload এর সাথে যুক্ত করা হচ্ছে
+    if (imageData) {
+      bloodInfo.image = imageData;
+    }
 
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/all`, {
@@ -89,14 +127,50 @@ const AddDonorPage = () => {
         <div className="w-full rounded-2xl border border-zinc-100 bg-white p-5 shadow-sm sm:p-8">
           <Form onSubmit={donorHandler} className="w-full">
             <Fieldset className="w-full">
-              <Fieldset.Legend className="text-left text-lg font-semibold text-zinc-900">
+              <Fieldset.Legend className="text-center text-lg font-semibold text-zinc-900">
                 Your Information
               </Fieldset.Legend>
-              <Description className="mb-6 mt-1 text-left text-sm text-zinc-500">
+              <Description className="mb-6 mt-1 text-center text-sm text-zinc-500">
                 Please make sure all details are accurate.
               </Description>
 
               <FieldGroup className="w-full gap-5">
+                {/* ✅ NEW: Photo upload field, preview সহ */}
+                <div className="flex w-full flex-col items-center gap-3">
+                  <div className="h-24 w-24 overflow-hidden rounded-full border border-zinc-200 bg-zinc-100">
+                    {imagePreview ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={imagePreview}
+                        alt="Donor preview"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-xs text-zinc-400">
+                        No photo
+                      </div>
+                    )}
+                  </div>
+
+                  <label
+                    htmlFor="donorImage"
+                    className="cursor-pointer rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                  >
+                    {imagePreview ? "Change Photo" : "Upload Photo"}
+                  </label>
+                  <input
+                    id="donorImage"
+                    name="imageFile"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                  <p className="text-xs text-zinc-400">
+                    Optional, max 2MB (JPG, PNG)
+                  </p>
+                </div>
+
                 <TextField isRequired name="name" className="w-full">
                   <Label className="text-sm font-medium text-zinc-700">
                     Name
@@ -148,14 +222,6 @@ const AddDonorPage = () => {
                   </TextField>
                 </div>
 
-                {/* ✅ FIXED: আগে এটা comment করা ছিল এবং item গুলোর
-                    id/textValue ভুল বসানো ছিল (florida, delaware,
-                    california, texas... এগুলো আসল blood group value
-                    ছিল না, অন্য কোনো example থেকে কপি হয়ে গিয়েছিল)।
-                    এখন সঠিক ৮টা blood group দিয়ে ঠিক করা হলো, এবং
-                    আগের free-text "BloodGroup" input-এর বদলে এই
-                    dropdown ব্যবহার করা হচ্ছে (ভুল টাইপ করার সুযোগ
-                    থাকবে না, যেমন কেউ "a positive" লিখে ফেলতে পারতো) */}
                 <Select
                   isRequired
                   name="BloodGroup"
@@ -265,6 +331,10 @@ const AddDonorPage = () => {
                   type="reset"
                   variant="secondary"
                   className="h-11 w-full rounded-lg font-semibold sm:w-auto"
+                  onPress={() => {
+                    setImagePreview(null);
+                    setImageData("");
+                  }}
                 >
                   Cancel
                 </Button>

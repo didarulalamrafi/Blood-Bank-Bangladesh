@@ -6,6 +6,8 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "favoriteDonors";
+const FALLBACK_IMAGE =
+  "https://i.ibb.co/LXR28brz/Gemini-Generated-Image-qjg53tqjg53tqjg5.png";
 
 export function DonorCard({ allBloods }) {
   const [favorites, setFavorites] = useState([]);
@@ -34,17 +36,32 @@ export function DonorCard({ allBloods }) {
       {allBloods.map((allBlood) => {
         const favorited = favorites.includes(allBlood._id);
 
+        // ✅ FIXED: আগে সব card এ একই hardcoded ছবি দেখাচ্ছিল।
+        // এখন donor এর নিজের uploaded image (base64 বা url) থাকলে
+        // সেটা দেখাবে, না থাকলে fallback placeholder দেখাবে।
+        const donorImage = allBlood.image || FALLBACK_IMAGE;
+
         return (
           <Card
             key={allBlood._id}
             className="flex h-full w-full flex-col items-stretch overflow-hidden"
           >
-            <div className="relative h-[160px] w-full shrink-0 overflow-hidden rounded-t-2xl">
+            <div className="relative h-[160px] w-full shrink-0 overflow-hidden rounded-t-2xl bg-zinc-100">
               <Image
-                src="https://i.ibb.co/LXR28brz/Gemini-Generated-Image-qjg53tqjg53tqjg5.png"
+                src={donorImage}
                 alt={allBlood.name || "Donor"}
                 fill
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className="object-contain"
+                // ✅ FIXED: object-cover ব্যবহার করলে ছবির কিছু অংশ crop
+                // হয়ে যাচ্ছিল (মাথার উপরের অংশ বাদ পড়ছিল)। এখন
+                // object-contain দেওয়া হলো, তাতে পুরো ছবিটাই frame এর
+                // ভেতরে দেখা যাবে, কোনো অংশ কাটা যাবে না — ছবি যদি
+                // container এর অনুপাতের সাথে না মেলে তাহলে দুই পাশে
+                // হালকা ফাঁকা জায়গা (letterbox) দেখাবে
+                // base64 data URL হলে Next.js optimizer এটা handle
+                // করতে পারে না, তাই unoptimized রাখা হলো
+                unoptimized={donorImage.startsWith("data:")}
               />
 
               {/* ছবির উপরে floating favourite icon */}
