@@ -1,13 +1,11 @@
 import Link from "next/link";
 import { Droplet, Heart, Users } from "lucide-react";
-import { DonorCard } from "@/components/DonorCard";
+import { DonorSearch } from "@/components/DonorSearch";
 
 export default async function Home() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  // ✅ NEW: এই পেজও prerender এর সময় build-time এ crash করতে পারে
-  // যদি apiUrl না থাকে বা backend down থাকে, তাই আগের মতোই
-  // guard clause + error handling যোগ করা হলো
+  // ✅ prerender এর সময় build-time এ crash এড়াতে guard clause
   if (!apiUrl) {
     throw new Error("NEXT_PUBLIC_API_URL is not defined");
   }
@@ -27,13 +25,9 @@ export default async function Home() {
 
   const allBloods = await res.json();
 
-  // ✅ NEW: প্রথম ১৫টা ডেটা কেটে নেওয়া হচ্ছে (home page এ পুরো
-  // লিস্ট দেখানো হবে না)
-  const previewBloods = allBloods.slice(0, 6);
-
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
-      {/* ✅ NEW: Hero Banner — blood donation সম্পর্কে motivational message */}
+      {/* Hero Banner — blood donation সম্পর্কে motivational message */}
       <div className="relative overflow-hidden bg-gradient-to-br from-red-600 via-red-700 to-red-800 px-4 py-14 sm:py-20">
         {/* subtle background pattern */}
         <div className="pointer-events-none absolute inset-0 opacity-10">
@@ -93,6 +87,7 @@ export default async function Home() {
         </div>
       </div>
 
+      {/* Search + Donor list section */}
       <div className="px-4 py-8 sm:py-12">
         <div className="mx-auto max-w-6xl">
           <div className="mb-8 text-center">
@@ -104,31 +99,7 @@ export default async function Home() {
             </p>
           </div>
 
-          {previewBloods.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <h2 className="text-xl font-semibold text-zinc-900">
-                No donors found yet
-              </h2>
-              <p className="mt-1 text-sm text-zinc-500">
-                Be the first to register as a donor.
-              </p>
-            </div>
-          ) : (
-            <>
-              <DonorCard allBloods={previewBloods} />
-
-              {allBloods.length > 15 && (
-                <div className="mt-10 flex justify-center">
-                  <Link
-                    href="/all"
-                    className="rounded-lg bg-red-600 px-6 py-3 font-semibold text-white transition hover:bg-red-700"
-                  >
-                    See All Donors
-                  </Link>
-                </div>
-              )}
-            </>
-          )}
+          <DonorSearch allBloods={allBloods} previewCount={5} />
         </div>
       </div>
     </div>

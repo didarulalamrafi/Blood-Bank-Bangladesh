@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Card } from "@heroui/react";
+import { Card } from "@heroui/react";
 import { Heart } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -80,9 +80,17 @@ export function DonorCard({ allBloods }) {
 
             <div className="flex flex-1 flex-col px-4 pb-4">
               <Card.Header className="gap-1.5 pt-4">
-                <Card.Title className="truncate text-lg">
-                  {allBlood.name}
-                </Card.Title>
+                <div className="flex items-center justify-between gap-2">
+                  <Card.Title className="truncate text-lg">
+                    {allBlood.name}
+                  </Card.Title>
+
+                  {/* ✅ NEW: Blood Group এখন নামের right side এ
+                      একটা circle badge আকারে দেখানো হচ্ছে */}
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white">
+                    {allBlood.BloodGroup}
+                  </div>
+                </div>
                 <div>
                   <p className="truncate text-sm text-default-500">
                     Location: {allBlood.location}
@@ -91,8 +99,7 @@ export function DonorCard({ allBloods }) {
               </Card.Header>
 
               <Card.Footer className="mt-4 flex w-full flex-col items-start gap-3">
-                {/* ✅ FIXED: Last Donation Date আর Mobile আলাদা করে
-                    দেখানো হচ্ছে, আগে দুইটা mix হয়ে গিয়েছিল */}
+                {/* Last Donation Date আর Mobile আলাদা করে দেখানো হচ্ছে */}
                 <div className="flex flex-col gap-0.5">
                   <span className="text-sm font-medium text-foreground">
                     Last Donation Date:{" "}
@@ -105,26 +112,24 @@ export function DonorCard({ allBloods }) {
                   </span>
                 </div>
 
+                {/* ✅ FIXED: Blood Group button বাদ দেওয়া হলো, badge
+                    আকারে উপরেই দেখানো হচ্ছে। নিচে শুধু Favourite button */}
                 <div className="flex w-full flex-col gap-2">
-                  <Button
-                    variant="danger"
-                    className="h-auto w-full items-center justify-center whitespace-normal py-2 text-center font-semibold"
-                  >
-                    Blood Group: {allBlood.BloodGroup}
-                  </Button>
-
-                  <Button
+                  <button
                     onClick={() => toggleFavorite(allBlood._id)}
-                    variant={favorited ? "danger" : "bordered"}
-                    className="h-auto w-full items-center justify-center gap-2 py-2 font-semibold"
+                    className={`flex h-auto w-full items-center justify-center gap-2 rounded-lg border-2 py-2 font-semibold transition-all duration-200 ${
+                      favorited
+                        ? "border-red-600 bg-red-600 text-white shadow-sm hover:bg-red-700"
+                        : "border-zinc-300 bg-transparent text-zinc-600 hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-red-800 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+                    }`}
                   >
                     <Heart
-                      className={`h-4 w-4 ${
-                        favorited ? "fill-white text-white" : ""
+                      className={`h-4 w-4 transition-transform duration-200 ${
+                        favorited ? "scale-110 fill-white text-white" : ""
                       }`}
                     />
-                    {favorited ? "Added to Favourite" : "Favourite"}
-                  </Button>
+                    {favorited ? "Added to Favourite" : "Add to Favourite"}
+                  </button>
                 </div>
               </Card.Footer>
             </div>
