@@ -290,26 +290,54 @@ const AddDonorPage = () => {
                   <FieldError />
                 </TextField>
 
-                <DateField className="w-full" name="date" type="date">
-                  <Label className="text-sm font-medium text-zinc-700">
-                    Last Donation Date
-                  </Label>
-                  <DateField.Group className="h-11 w-full rounded-lg">
+                <DatePicker className="w-72" name="date">
+                  <Label>Date</Label>
+                  <DateField.Group fullWidth>
                     <DateField.Input>
                       {(segment) => <DateField.Segment segment={segment} />}
                     </DateField.Input>
                     <DateField.Suffix>
-                      <Calendar className="size-4 text-zinc-400" />
+                      <DatePicker.Trigger>
+                        <DatePicker.TriggerIndicator />
+                      </DatePicker.Trigger>
                     </DateField.Suffix>
                   </DateField.Group>
-                </DateField>
-
-                <TextField isRequired name="bio" className="w-full">
+                  <DatePicker.Popover>
+                    <Calendar aria-label="Event date">
+                      <Calendar.Header>
+                        <Calendar.YearPickerTrigger>
+                          <Calendar.YearPickerTriggerHeading />
+                          <Calendar.YearPickerTriggerIndicator />
+                        </Calendar.YearPickerTrigger>
+                        <Calendar.NavButton slot="previous" />
+                        <Calendar.NavButton slot="next" />
+                      </Calendar.Header>
+                      <Calendar.Grid>
+                        <Calendar.GridHeader>
+                          {(day) => (
+                            <Calendar.HeaderCell>{day}</Calendar.HeaderCell>
+                          )}
+                        </Calendar.GridHeader>
+                        <Calendar.GridBody>
+                          {(date) => <Calendar.Cell date={date} />}
+                        </Calendar.GridBody>
+                      </Calendar.Grid>
+                      <Calendar.YearPickerGrid>
+                        <Calendar.YearPickerGridBody>
+                          {({ year }) => (
+                            <Calendar.YearPickerCell year={year} />
+                          )}
+                        </Calendar.YearPickerGridBody>
+                      </Calendar.YearPickerGrid>
+                    </Calendar>
+                  </DatePicker.Popover>
+                </DatePicker>
+                <TextField name="bio" className="w-full">
                   <Label className="text-sm font-medium text-zinc-700">
                     Bio
                   </Label>
                   <TextArea
-                    placeholder="Tell us about yourself..."
+                    placeholder="Tell us anything..."
                     className="min-h-24 w-full rounded-lg"
                   />
                   <Description className="text-xs text-zinc-400">
