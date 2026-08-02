@@ -285,13 +285,13 @@ const AddDonorPage = () => {
                     Location
                   </Label>
                   <Input
-                    placeholder="Enter your blood location"
+                    placeholder="Distict, Upazila, Area"
                     className="h-11 w-full rounded-lg"
                   />
                   <FieldError />
                 </TextField>
 
-                <DatePicker className="w-72" name="date">
+                <DatePicker className="w-full" name="date">
                   <Label>Date</Label>
                   <DateField.Group fullWidth>
                     <DateField.Input>
