@@ -24,12 +24,9 @@ const AddDonorPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  // ✅ NEW: image preview এবং base64 data রাখার জন্য state
   const [imagePreview, setImagePreview] = useState(null);
   const [imageData, setImageData] = useState("");
 
-  // ✅ NEW: image file select করলে সেটাকে base64 এ কনভার্ট করা হচ্ছে,
-  // কারণ বর্তমান submit logic JSON.stringify দিয়ে পাঠাচ্ছে (multipart/form-data না)
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) {
@@ -65,7 +62,6 @@ const AddDonorPage = () => {
     const formData = new FormData(e.target);
     const bloodInfo = Object.fromEntries(formData.entries());
 
-    // ✅ NEW: base64 image data (যদি থাকে) payload এর সাথে যুক্ত করা হচ্ছে
     if (imageData) {
       bloodInfo.image = imageData;
     }
@@ -96,14 +92,14 @@ const AddDonorPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-zinc-50 px-4 py-6 sm:py-10">
-      <div className="mx-auto w-full max-w-md overflow-x-hidden">
-        <div className="mb-6 text-center">
-          <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
+    <div className="min-h-screen w-full bg-white px-4 py-4 sm:py-6">
+      <div className="mx-auto w-full max-w-md">
+        <div className="mb-4 text-center">
+          <div className="mb-2 inline-flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
             <svg
               viewBox="0 0 24 24"
               fill="none"
-              className="h-6 w-6 text-red-600"
+              className="h-9 w-8.5 text-red-600"
             >
               <path
                 d="M12 2C12 2 5 10.5 5 15a7 7 0 0014 0c0-4.5-7-13-7-13z"
@@ -112,7 +108,18 @@ const AddDonorPage = () => {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-zinc-900 sm:text-3xl">
-            Add Blood Donor
+            Become{" "}
+            <span
+              className="text-2xl sm:text-3xl font-black tracking-widest uppercase select-none
+           bg-gradient-to-b from-red-500 via-red-700 to-black 
+           bg-clip-text text-transparent 
+           drop-shadow-[0_0_15px_rgba(220,38,38,0.8)]
+           transition-all duration-300
+           inline-block animate-[spin_1s_linear_5]"
+            >
+              a
+            </span>{" "}
+            Blood Donor
           </h1>
           <p className="mt-1 text-sm text-zinc-500">
             Every detail helps save a life faster.
@@ -120,25 +127,25 @@ const AddDonorPage = () => {
         </div>
 
         {error && (
-          <div className="mb-5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="mb-3 rounded-lg border border-red-100 bg-red-50 px-4 py-2 text-sm text-red-700">
             {error}
           </div>
         )}
 
-        <div className="w-full rounded-2xl border border-zinc-100 bg-white p-5 shadow-sm sm:p-8">
+        <div className="w-full rounded-lg border border-gray-200 bg-white p-6 sm:p-6 shadow-sm">
           <Form onSubmit={donorHandler} className="w-full">
             <Fieldset className="w-full">
               <Fieldset.Legend className="text-center text-lg font-semibold text-zinc-900">
                 Your Information
               </Fieldset.Legend>
-              <Description className="mb-6 mt-1 text-center text-sm text-zinc-500">
+              <Description className="mb-4 mt-1 text-center text-sm text-zinc-500">
                 Please make sure all details are accurate.
               </Description>
 
-              <FieldGroup className="w-full gap-5">
-                {/* ✅ NEW: Photo upload field, preview সহ */}
-                <div className="flex w-full flex-col items-center gap-3">
-                  <div className="h-24 w-24 overflow-hidden rounded-full border border-zinc-200 bg-zinc-100">
+              <FieldGroup className="w-full gap-3">
+                {/* Photo upload field */}
+                <div className="flex w-full flex-col items-center gap-1 pb-2 border-b border-gray-100">
+                  <div className="h-24 w-24 overflow-hidden rounded-full border border-gray-200 bg-gray-50">
                     {imagePreview ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -147,7 +154,7 @@ const AddDonorPage = () => {
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center text-xs text-zinc-400">
+                      <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
                         No photo
                       </div>
                     )}
@@ -155,7 +162,7 @@ const AddDonorPage = () => {
 
                   <label
                     htmlFor="donorImage"
-                    className="cursor-pointer rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                    className="cursor-pointer rounded-md border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
                   >
                     {imagePreview ? "Change Photo" : "Upload Photo"}
                   </label>
@@ -167,7 +174,7 @@ const AddDonorPage = () => {
                     onChange={handleImageChange}
                     className="hidden"
                   />
-                  <p className="text-xs text-zinc-400">
+                  <p className="text-xs text-gray-400">
                     Optional, max 2MB (JPG, PNG)
                   </p>
                 </div>
@@ -178,7 +185,7 @@ const AddDonorPage = () => {
                   </Label>
                   <Input
                     placeholder="Enter your name"
-                    className="h-11 w-full rounded-lg"
+                    className="h-10 w-full rounded-md"
                   />
                   <FieldError />
                 </TextField>
@@ -189,12 +196,12 @@ const AddDonorPage = () => {
                   </Label>
                   <Input
                     placeholder="Enter your email"
-                    className="h-11 w-full rounded-lg"
+                    className="h-10 w-full rounded-md"
                   />
                   <FieldError />
                 </TextField>
 
-                <div className="grid w-full grid-cols-1 gap-5 sm:grid-cols-2">
+                <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
                   <TextField
                     isRequired
                     name="mobile"
@@ -206,7 +213,7 @@ const AddDonorPage = () => {
                     </Label>
                     <Input
                       placeholder="e.g. 017XXXXXXXX"
-                      className="h-11 w-full rounded-lg"
+                      className="h-10 w-full rounded-md"
                     />
                     <FieldError />
                   </TextField>
@@ -217,7 +224,7 @@ const AddDonorPage = () => {
                     </Label>
                     <Input
                       placeholder="Optional"
-                      className="h-11 w-full rounded-lg"
+                      className="h-10 w-full rounded-md"
                     />
                     <FieldError />
                   </TextField>
@@ -232,7 +239,7 @@ const AddDonorPage = () => {
                   <Label className="text-sm font-medium text-zinc-700">
                     Blood Group
                   </Label>
-                  <Select.Trigger className="h-11 w-full rounded-lg">
+                  <Select.Trigger className="h-10 w-full rounded-md">
                     <Select.Value />
                     <Select.Indicator />
                   </Select.Trigger>
@@ -286,13 +293,13 @@ const AddDonorPage = () => {
                   </Label>
                   <Input
                     placeholder="Distict, Upazila, Area"
-                    className="h-11 w-full rounded-lg"
+                    className="h-10 w-full rounded-md"
                   />
                   <FieldError />
                 </TextField>
 
                 <DatePicker className="w-full" name="date">
-                  <Label>Date</Label>
+                  <Label>Last Donation Date</Label>
                   <DateField.Group fullWidth>
                     <DateField.Input>
                       {(segment) => <DateField.Segment segment={segment} />}
@@ -333,33 +340,42 @@ const AddDonorPage = () => {
                     </Calendar>
                   </DatePicker.Popover>
                 </DatePicker>
+
+                <TextField name="BloodBankName" type="text" className="w-full">
+                  <Label className="text-sm font-medium text-zinc-700">
+                    Your Blood Bank
+                  </Label>
+                  <Input
+                    placeholder="If you are a member of any Blood Donation Group."
+                    className="h-10 w-full rounded-md"
+                  />
+                  <FieldError />
+                </TextField>
+
                 <TextField name="bio" className="w-full">
                   <Label className="text-sm font-medium text-zinc-700">
                     Bio
                   </Label>
                   <TextArea
                     placeholder="Tell us anything..."
-                    className="min-h-24 w-full rounded-lg"
+                    className="min-h-20 w-full rounded-md"
                   />
-                  <Description className="text-xs text-zinc-400">
-                    Minimum 10 characters
-                  </Description>
                   <FieldError />
                 </TextField>
               </FieldGroup>
 
-              <Fieldset.Actions className="mt-8 flex w-full flex-col gap-3 sm:flex-row-reverse">
+              <Fieldset.Actions className="mt-6 flex w-full flex-col gap-2 sm:flex-row-reverse">
                 <Button
                   type="submit"
                   isDisabled={isSubmitting}
-                  className="h-11 w-full rounded-lg bg-red-600 font-semibold text-white hover:bg-red-700 sm:w-auto sm:flex-1"
+                  className="h-10 w-full rounded-md bg-blue-600 font-semibold text-white hover:bg-blue-700 sm:w-auto sm:flex-1"
                 >
                   {isSubmitting ? "Saving..." : "Save Donor Info"}
                 </Button>
                 <Button
                   type="reset"
                   variant="secondary"
-                  className="h-11 w-full rounded-lg font-semibold sm:w-auto"
+                  className="h-10 w-full rounded-md font-semibold sm:w-auto"
                   onPress={() => {
                     setImagePreview(null);
                     setImageData("");
