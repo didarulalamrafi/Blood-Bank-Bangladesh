@@ -16,8 +16,13 @@ import {
   TextArea,
   TextField,
 } from "@heroui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+
+// District -> Upazila -> Union data now lives server-side only, served
+// through /api/locations in slices (see app/api/locations/route.js).
+// This keeps the ~60KB dataset out of the client bundle entirely — the
+// browser only ever fetches the few KB it actually needs at each step.
 
 const AddDonorPage = () => {
   const router = useRouter();
@@ -26,6 +31,83 @@ const AddDonorPage = () => {
 
   const [imagePreview, setImagePreview] = useState(null);
   const [imageData, setImageData] = useState("");
+
+  // Cascading location state
+  const [district, setDistrict] = useState(null);
+  const [upazila, setUpazila] = useState(null);
+  const [union, setUnion] = useState(null);
+  const [customUpazila, setCustomUpazila] = useState("");
+  const [customArea, setCustomArea] = useState("");
+
+  const [districtNames, setDistrictNames] = useState([]);
+  const [upazilaNames, setUpazilaNames] = useState([]);
+  const [unionNames, setUnionNames] = useState([]);
+  const [loadingUpazilas, setLoadingUpazilas] = useState(false);
+  const [loadingUnions, setLoadingUnions] = useState(false);
+
+  // Load district list once on mount (tiny payload, ~1KB)
+  useEffect(() => {
+    fetch("/api/locations")
+      .then((res) => res.json())
+      .then((data) => setDistrictNames(data.districts || []))
+      .catch((err) => console.error("Failed to load districts:", err));
+  }, []);
+
+  // Load upazilas whenever district changes
+  useEffect(() => {
+    if (!district) {
+      setUpazilaNames([]);
+      return;
+    }
+    setLoadingUpazilas(true);
+    fetch(`/api/locations?district=${encodeURIComponent(district)}`)
+      .then((res) => res.json())
+      .then((data) => setUpazilaNames(data.upazilas || []))
+      .catch((err) => console.error("Failed to load upazilas:", err))
+      .finally(() => setLoadingUpazilas(false));
+  }, [district]);
+
+  // Load unions whenever district + upazila change
+  useEffect(() => {
+    if (!district || !upazila) {
+      setUnionNames([]);
+      return;
+    }
+    setLoadingUnions(true);
+    fetch(
+      `/api/locations?district=${encodeURIComponent(district)}&upazila=${encodeURIComponent(upazila)}`,
+    )
+      .then((res) => res.json())
+      .then((data) => setUnionNames(data.unions || []))
+      .catch((err) => console.error("Failed to load unions:", err))
+      .finally(() => setLoadingUnions(false));
+  }, [district, upazila]);
+
+  // Check if upazila and union lists exist
+  const hasUpazilaList = upazilaNames.length > 0;
+  const hasUnionList = unionNames.length > 0;
+
+  const handleDistrictChange = (key) => {
+    setDistrict(key);
+    setUpazila(null);
+    setCustomUpazila("");
+    setUnion(null);
+    setCustomArea("");
+  };
+
+  const handleUpazilaChange = (key) => {
+    setUpazila(key);
+    setCustomUpazila("");
+    setUnion(null);
+    setCustomArea("");
+  };
+
+  const handleCustomUpazilaChange = (value) => {
+    setCustomUpazila(value);
+    setUpazila(null);
+    setUnion(null);
+    setCustomArea("");
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
@@ -57,10 +139,28 @@ const AddDonorPage = () => {
   const donorHandler = async (e) => {
     e.preventDefault();
     setError("");
+
+    // Get the actual upazila value (from select or custom input)
+    const upazilaValue = upazila || customUpazila;
+    // Get the actual union/area value (from select or custom input)
+    const areaValue = union || customArea;
+
+    if (!district || !upazilaValue || !areaValue) {
+      setError("Please select or enter District, Upazila and Union/Area.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     const formData = new FormData(e.target);
     const bloodInfo = Object.fromEntries(formData.entries());
+
+    bloodInfo.district = district;
+    bloodInfo.upazila = upazilaValue;
+    bloodInfo.union = areaValue;
+    bloodInfo.location = [district, upazilaValue, areaValue]
+      .filter(Boolean)
+      .join(", ");
 
     if (imageData) {
       bloodInfo.image = imageData;
@@ -102,7 +202,7 @@ const AddDonorPage = () => {
               className="h-9 w-8.5 text-red-600"
             >
               <path
-                d="M12 2C12 2 5 10.5 5 15a7 7 0 0014 0c0-4.5-7-13-7-13z"
+                d="M12 2C12 2 5 10.5 5 15a7 7 0 0114 0c0-4.5-7-13-7-13z"
                 fill="currentColor"
               />
             </svg>
@@ -282,17 +382,176 @@ const AddDonorPage = () => {
                   <FieldError />
                 </Select>
 
-                <TextField
+                {/* Location: District -> Upazila -> Union / Area */}
+                <Select
                   isRequired
-                  name="location"
-                  type="text"
+                  placeholder="Select district"
                   className="w-full"
+                  selectedKey={district}
+                  onSelectionChange={handleDistrictChange}
                 >
                   <Label className="text-sm font-medium text-zinc-700">
-                    Location
+                    District
+                  </Label>
+                  <Select.Trigger className="h-10 w-full rounded-md">
+                    <Select.Value />
+                    <Select.Indicator />
+                  </Select.Trigger>
+                  <Select.Popover>
+                    <ListBox items={districtNames.map((n) => ({ id: n }))}>
+                      {(item) => (
+                        <ListBox.Item id={item.id} textValue={item.id}>
+                          {item.id}
+                          <ListBox.ItemIndicator />
+                        </ListBox.Item>
+                      )}
+                    </ListBox>
+                  </Select.Popover>
+                  <FieldError />
+                </Select>
+
+                {loadingUpazilas ? (
+                  <Select
+                    isDisabled
+                    placeholder="Loading..."
+                    className="w-full"
+                  >
+                    <Label className="text-sm font-medium text-zinc-700">
+                      Upazila
+                    </Label>
+                    <Select.Trigger className="h-10 w-full rounded-md">
+                      <Select.Value />
+                      <Select.Indicator />
+                    </Select.Trigger>
+                  </Select>
+                ) : hasUpazilaList ? (
+                  <Select
+                    isRequired
+                    isDisabled={!district}
+                    placeholder={
+                      !district ? "Select district first" : "Select upazila"
+                    }
+                    className="w-full"
+                    selectedKey={upazila}
+                    onSelectionChange={handleUpazilaChange}
+                  >
+                    <Label className="text-sm font-medium text-zinc-700">
+                      Upazila
+                    </Label>
+                    <Select.Trigger className="h-10 w-full rounded-md">
+                      <Select.Value />
+                      <Select.Indicator />
+                    </Select.Trigger>
+                    <Select.Popover>
+                      <ListBox items={upazilaNames.map((n) => ({ id: n }))}>
+                        {(item) => (
+                          <ListBox.Item id={item.id} textValue={item.id}>
+                            {item.id}
+                            <ListBox.ItemIndicator />
+                          </ListBox.Item>
+                        )}
+                      </ListBox>
+                    </Select.Popover>
+                    <FieldError />
+                  </Select>
+                ) : (
+                  <TextField
+                    isRequired={!!district}
+                    isDisabled={!district}
+                    className="w-full"
+                    value={customUpazila}
+                    onChange={handleCustomUpazilaChange}
+                  >
+                    <Label className="text-sm font-medium text-zinc-700">
+                      Upazila
+                    </Label>
+                    <Input
+                      placeholder={
+                        district
+                          ? "No upazila list for this district — type your upazila"
+                          : "Select district first"
+                      }
+                      className="h-10 w-full rounded-md"
+                    />
+                    <FieldError />
+                  </TextField>
+                )}
+
+                {loadingUnions ? (
+                  <Select
+                    isDisabled
+                    placeholder="Loading..."
+                    className="w-full"
+                  >
+                    <Label className="text-sm font-medium text-zinc-700">
+                      Union
+                    </Label>
+                    <Select.Trigger className="h-10 w-full rounded-md">
+                      <Select.Value />
+                      <Select.Indicator />
+                    </Select.Trigger>
+                  </Select>
+                ) : hasUnionList ? (
+                  <Select
+                    isRequired
+                    isDisabled={!upazila && !customUpazila}
+                    placeholder={
+                      upazila || customUpazila
+                        ? "Select union"
+                        : "Select upazila first"
+                    }
+                    className="w-full"
+                    selectedKey={union}
+                    onSelectionChange={(key) => setUnion(key)}
+                  >
+                    <Label className="text-sm font-medium text-zinc-700">
+                      Union
+                    </Label>
+                    <Select.Trigger className="h-10 w-full rounded-md">
+                      <Select.Value />
+                      <Select.Indicator />
+                    </Select.Trigger>
+                    <Select.Popover>
+                      <ListBox items={unionNames.map((n) => ({ id: n }))}>
+                        {(item) => (
+                          <ListBox.Item id={item.id} textValue={item.id}>
+                            {item.id}
+                            <ListBox.ItemIndicator />
+                          </ListBox.Item>
+                        )}
+                      </ListBox>
+                    </Select.Popover>
+                    <FieldError />
+                  </Select>
+                ) : (
+                  <TextField
+                    isRequired={!!(upazila || customUpazila)}
+                    isDisabled={!upazila && !customUpazila}
+                    className="w-full"
+                    value={customArea}
+                    onChange={setCustomArea}
+                  >
+                    <Label className="text-sm font-medium text-zinc-700">
+                      Area
+                    </Label>
+                    <Input
+                      placeholder={
+                        upazila || customUpazila
+                          ? "No union list for this upazila — type your area"
+                          : "Select upazila first"
+                      }
+                      className="h-10 w-full rounded-md"
+                    />
+                    <FieldError />
+                  </TextField>
+                )}
+
+                <TextField name="BloodBankName" type="text" className="w-full">
+                  <Label className="text-sm font-medium text-zinc-700">
+                    Your Blood Bank
                   </Label>
                   <Input
-                    placeholder="Distict, Upazila, Area"
+                    placeholder="If you are a member of any Blood Donation Group."
                     className="h-10 w-full rounded-md"
                   />
                   <FieldError />
@@ -341,17 +600,6 @@ const AddDonorPage = () => {
                   </DatePicker.Popover>
                 </DatePicker>
 
-                <TextField name="BloodBankName" type="text" className="w-full">
-                  <Label className="text-sm font-medium text-zinc-700">
-                    Your Blood Bank
-                  </Label>
-                  <Input
-                    placeholder="If you are a member of any Blood Donation Group."
-                    className="h-10 w-full rounded-md"
-                  />
-                  <FieldError />
-                </TextField>
-
                 <TextField name="bio" className="w-full">
                   <Label className="text-sm font-medium text-zinc-700">
                     Bio
@@ -379,6 +627,11 @@ const AddDonorPage = () => {
                   onPress={() => {
                     setImagePreview(null);
                     setImageData("");
+                    setDistrict(null);
+                    setUpazila(null);
+                    setCustomUpazila("");
+                    setUnion(null);
+                    setCustomArea("");
                   }}
                 >
                   Cancel
