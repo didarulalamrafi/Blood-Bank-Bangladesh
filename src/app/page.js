@@ -91,7 +91,7 @@ export default async function Home() {
       <div className="px-4 py-8 sm:py-12">
         <div className="mx-auto max-w-6xl">
           <div className="mb-8 text-center">
-            <h2 className="text-2xl font-bold text-zinc-900 sm:text-3xl">
+            <h2 className="text-2xl font-bold text-red-600 sm:text-3xl">
               Blood Donors Near You
             </h2>
             <p className="mt-2 text-sm text-zinc-500">
