@@ -16,6 +16,10 @@
  * pill button (একটা ট্যাপ করলেই select) — মোবাইলে dropdown এর
  * চেয়ে অনেক দ্রুত ও visually blood-group card এর মতো লাগে, এটাই
  * এই কম্পোনেন্টের signature/distinctive অংশ।
+ *
+ * ✅ NEW: শুধু location দিয়ে না, এখন একই সার্চ বক্স দিয়ে নাম এবং
+ * মোবাইল নম্বর দিয়েও donor খোঁজা যাবে — একটাই ইনপুট, আলাদা field
+ * বাড়িয়ে UI ভারী না করে matching যুক্তি বাড়ানো হয়েছে
  * ==============================================================
  */
 
@@ -28,25 +32,33 @@ const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 export function DonorSearch({ allBloods, previewCount }) {
   const [bloodGroup, setBloodGroup] = useState("");
-  const [location, setLocation] = useState("");
+  // ✅ NEW: আগে শুধু "location" state ছিল, এখন এটাই সাধারণ সার্চ query
+  // হিসেবে কাজ করে — নাম, মোবাইল, এবং লোকেশন তিনটার সাথেই মেলানো হয়
+  const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
     return allBloods.filter((donor) => {
       const donorGroup = (donor.BloodGroup || "").toString().toLowerCase();
-      const donorLocation = (donor.location || "").toString().toLowerCase();
+      const term = query.trim().toLowerCase();
 
       const matchesGroup = bloodGroup
         ? donorGroup === bloodGroup.toLowerCase()
         : true;
-      const matchesLocation = location
-        ? donorLocation.includes(location.toLowerCase())
+
+      // ✅ NEW: নাম, মোবাইল (দুইটা নম্বরই), আর লোকেশন — যেকোনো একটাতে
+      // মিললেই donor দেখানো হবে
+      const matchesQuery = term
+        ? (donor.name || "").toString().toLowerCase().includes(term) ||
+          (donor.mobile || "").toString().toLowerCase().includes(term) ||
+          (donor.mobile2 || "").toString().toLowerCase().includes(term) ||
+          (donor.location || "").toString().toLowerCase().includes(term)
         : true;
 
-      return matchesGroup && matchesLocation;
+      return matchesGroup && matchesQuery;
     });
-  }, [allBloods, bloodGroup, location]);
+  }, [allBloods, bloodGroup, query]);
 
-  const hasFilters = bloodGroup || location;
+  const hasFilters = bloodGroup || query;
   const displayList = hasFilters
     ? filtered
     : previewCount
@@ -55,7 +67,7 @@ export function DonorSearch({ allBloods, previewCount }) {
 
   const clearFilters = () => {
     setBloodGroup("");
-    setLocation("");
+    setQuery("");
   };
 
   return (
@@ -87,15 +99,15 @@ export function DonorSearch({ allBloods, previewCount }) {
           </div>
         </div>
 
-        {/* Location সার্চ + Clear বাটন */}
+        {/* ✅ NEW: সার্চ ইনপুট এখন নাম, মোবাইল ও লোকেশন — তিনটা দিয়েই খোঁজে */}
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
             <input
               type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Search by district, upazila, area..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search by name, mobile number, district, upazila..."
               className="w-full rounded-full border border-zinc-300 bg-white py-2.5 pl-11 pr-4 text-sm text-zinc-900 focus:border-red-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
             />
           </div>
@@ -133,7 +145,7 @@ export function DonorSearch({ allBloods, previewCount }) {
           </h2>
           <p className="mt-1 text-sm text-zinc-500">
             {hasFilters
-              ? "Try a different blood group or location."
+              ? "Try a different blood group, name, mobile number, or location."
               : "Be the first to register as a donor."}
           </p>
         </div>
