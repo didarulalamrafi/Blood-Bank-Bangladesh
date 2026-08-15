@@ -54,7 +54,24 @@ export default function Navbar() {
                   : "text-zinc-600 hover:text-red-600"
               }`}
             >
-              All Blood
+              Donor
+              <span
+                className={`absolute inset-x-2.5 -bottom-[1px] h-0.5 rounded-full bg-red-600 transition-transform duration-200 sm:inset-x-3 ${
+                  isAllBloodActive ? "scale-x-100" : "scale-x-0"
+                }`}
+              />
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/about"
+              className={`relative px-2.5 py-2 text-lg font-medium transition-colors sm:px-3 ${
+                isAllBloodActive
+                  ? "text-red-600"
+                  : "text-zinc-600 hover:text-red-600"
+              }`}
+            >
+              About
               <span
                 className={`absolute inset-x-2.5 -bottom-[1px] h-0.5 rounded-full bg-red-600 transition-transform duration-200 sm:inset-x-3 ${
                   isAllBloodActive ? "scale-x-100" : "scale-x-0"
