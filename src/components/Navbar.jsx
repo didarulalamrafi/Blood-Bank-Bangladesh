@@ -5,7 +5,7 @@
  * Navbar — কমপ্যাক্ট মোবাইল মেনু (About + Favourite), Donor বাইরে
  * ==============================================================
  * বদল হয়েছে (আগের ভার্সনের তুলনায়):
- * ১. ✅ NEW: "Donor" এখন মোবাইলেও Menu-এর বাইরে, সবসময় visible —
+ * ১. ✅ NEW: "Donors" এখন মোবাইলেও Menu-এর বাইরে, সবসময় visible —
  *    আগে এটা mobile menu-এর ভেতরে ছিল, এখন বের করে আনা হলো
  * ২. ✅ NEW: Heart (Favourite) আইকন মোবাইলে এখন Menu-এর ভেতরে চলে
  *    গেছে (About এর সাথে) — ডেস্কটপে (sm+) আগের মতোই সবসময় visible
@@ -25,7 +25,7 @@ import { Droplet, Heart, Plus, Menu, X } from "lucide-react";
 
 // ডেস্কটপে (sm+) inline row-তে দেখানোর জন্য
 const DESKTOP_NAV_LINKS = [
-  { href: "/all", label: "Donor" },
+  { href: "/all", label: "Donors" },
   { href: "/about", label: "About" },
 ];
 
@@ -85,7 +85,7 @@ export default function Navbar() {
 
         {/* ---------- ডান পাশ ---------- */}
         <div className="flex items-center gap-1 sm:gap-2">
-          {/* ✅ NEW: Donor — মোবাইলেও সবসময় visible, Menu এর বাইরে
+          {/* ✅ NEW: Donors — মোবাইলেও সবসময় visible, Menu এর বাইরে
               (ডেস্কটপে আগে থেকেই উপরের row-তে আছে, তাই এখানে শুধু মোবাইলে দেখাবে) */}
           <Link
             href="/all"
@@ -93,7 +93,7 @@ export default function Navbar() {
               isAllActive ? "text-red-600" : "text-zinc-600 hover:text-red-600"
             }`}
           >
-            Donor
+            Donors
           </Link>
 
           {/* Favourite — ডেস্কটপে সবসময় visible, মোবাইলে এখন Menu-এর ভেতরে */}

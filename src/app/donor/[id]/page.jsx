@@ -1,7 +1,17 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Award, ListFilter, Phone } from "lucide-react";
+import {
+  ArrowLeft,
+  Award,
+  Building2,
+  Calendar,
+  ListFilter,
+  Mail,
+  MapPin,
+  Phone,
+  PhoneCall,
+} from "lucide-react";
 import { ShareDonor } from "@/components/ShareDonor";
 
 const FALLBACK_IMAGE =
@@ -36,13 +46,44 @@ export async function generateMetadata({ params }) {
   };
 }
 
+// Small helper row for the info list — skips rendering if the value is empty
+function InfoRow({ icon: Icon, label, value, href }) {
+  if (!value) return null;
+
+  const content = (
+    <>
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-600">
+        <Icon className="h-4 w-4" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-xs font-medium text-zinc-400">{label}</span>
+        <span className="block truncate text-sm font-semibold text-zinc-800">
+          {value}
+        </span>
+      </span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <a
+        href={href}
+        className="flex items-center gap-3 rounded-xl px-2 py-2 transition hover:bg-zinc-50"
+      >
+        {content}
+      </a>
+    );
+  }
+
+  return <div className="flex items-center gap-3 px-2 py-2">{content}</div>;
+}
+
 export default async function DonorDetailsPage({ params }) {
   const { id } = await params;
   const donor = await getDonor(id);
 
   if (!donor) notFound();
 
-  const hasRealImage = Boolean(donor.image);
   const donorImage = donor.image || FALLBACK_IMAGE;
 
   const daysSinceDonation = donor.date
@@ -58,6 +99,14 @@ export default async function DonorDetailsPage({ params }) {
         ? "text-green-600"
         : "text-red-600";
 
+  const lastDonationLabel = donor.date
+    ? new Date(donor.date).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : null;
+
   return (
     <div className="min-h-screen bg-zinc-50 px-4 py-6 sm:px-6 sm:py-10">
       <div className="mx-auto max-w-xl">
@@ -71,40 +120,39 @@ export default async function DonorDetailsPage({ params }) {
         </Link>
 
         <div className="overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-black/5">
-          {/* Image */}
-          <div
-            className={`relative h-[260px] w-full sm:h-[340px] ${
-              hasRealImage ? "bg-zinc-100" : "bg-red-50"
-            }`}
-          >
+          {/* Image — always shown full/uncropped */}
+          <div className="relative w-full bg-red-50">
             <Image
               src={donorImage}
               alt={donor.name || "Donor"}
-              fill
+              width={800}
+              height={800}
               priority
               sizes="(max-width: 640px) 100vw, 576px"
-              className={
-                hasRealImage ? "object-cover object-top" : "object-contain p-8"
-              }
+              className="h-auto max-h-[70vh] w-full object-contain"
               unoptimized={donorImage.startsWith("data:")}
             />
-
-            <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/40 to-transparent sm:hidden" />
-
-            <div className="absolute right-4 top-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-600 text-sm font-bold text-white shadow-lg ring-4 ring-white/80 sm:h-14 sm:w-14">
-              {donor.BloodGroup}
-            </div>
           </div>
 
           {/* Details */}
           <div className="px-5 py-5 sm:px-7 sm:py-6">
-            <h1 className="text-xl font-bold text-zinc-900 sm:text-2xl">
-              {donor.name}
-            </h1>
-            <p className="mt-0.5 text-sm text-zinc-500 sm:text-base">
-              {donor.location}
-            </p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h1 className="text-xl font-bold text-zinc-900 sm:text-2xl">
+                  {donor.name}
+                </h1>
+                <p className="mt-0.5 flex items-center gap-1 text-sm text-zinc-500 sm:text-base">
+                  <MapPin className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{donor.location}</span>
+                </p>
+              </div>
 
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-600 text-sm font-bold text-white shadow-lg ring-4 ring-white/80 sm:h-14 sm:w-14">
+                {donor.BloodGroup}
+              </div>
+            </div>
+
+            {/* Stats badges */}
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <span
                 className={`rounded-full bg-zinc-50 px-3 py-1 text-xs font-semibold ring-1 ring-inset ring-zinc-200 sm:text-sm ${dayColor}`}
@@ -125,6 +173,41 @@ export default async function DonorDetailsPage({ params }) {
                 {donor.bio}
               </p>
             )}
+
+            {/* All collected info */}
+            <div className="mt-5 divide-y divide-zinc-100 border-t border-zinc-100">
+              <InfoRow
+                icon={Phone}
+                label="Mobile Number"
+                value={donor.mobile}
+                href={donor.mobile ? `tel:${donor.mobile}` : undefined}
+              />
+              <InfoRow
+                icon={PhoneCall}
+                label="Alternative Number"
+                value={donor.mobile2}
+                href={donor.mobile2 ? `tel:${donor.mobile2}` : undefined}
+              />
+              <InfoRow
+                icon={Mail}
+                label="Email"
+                value={donor.email}
+                href={donor.email ? `mailto:${donor.email}` : undefined}
+              />
+              <InfoRow
+                icon={Building2}
+                label="Blood Bank / Group"
+                value={donor.BloodBankName}
+              />
+              <InfoRow icon={MapPin} label="District" value={donor.district} />
+              <InfoRow icon={MapPin} label="Upazila" value={donor.upazila} />
+              <InfoRow icon={MapPin} label="Union / Area" value={donor.union} />
+              <InfoRow
+                icon={Calendar}
+                label="Last Donation Date"
+                value={lastDonationLabel}
+              />
+            </div>
 
             {/* Actions */}
             <div className="mt-6 flex items-center gap-2">
