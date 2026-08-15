@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Droplet, Heart, Users } from "lucide-react";
 import { DonorSearch } from "@/components/DonorSearch";
+import ReviewComponent from "@/components/ReviewComponent"; // ✅ রিভিউ কম্পোনেন্ট ইমপোর্ট করুন
 
 export default async function Home() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -102,6 +103,9 @@ export default async function Home() {
           <DonorSearch allBloods={allBloods} previewCount={5} />
         </div>
       </div>
+
+      {/* ✅ রিভিউ কম্পোনেন্ট সেকশন - নতুন যোগ করা */}
+      <ReviewComponent />
     </div>
   );
 }
