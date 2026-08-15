@@ -162,6 +162,11 @@ const AddDonorPage = () => {
       .filter(Boolean)
       .join(", ");
 
+    // Ensure total donations is stored as a number, defaulting to 0
+    bloodInfo.totalDonations = bloodInfo.totalDonations
+      ? Number(bloodInfo.totalDonations)
+      : 0;
+
     if (imageData) {
       bloodInfo.image = imageData;
     }
@@ -557,6 +562,23 @@ const AddDonorPage = () => {
                   <FieldError />
                 </TextField>
 
+                <TextField
+                  name="totalDonations"
+                  type="number"
+                  className="w-full"
+                >
+                  <Label className="text-sm font-medium text-zinc-700">
+                    Total Blood Donation
+                  </Label>
+                  <Input
+                    placeholder="How many times have you donated so far?"
+                    min={0}
+                    step={1}
+                    className="h-10 w-full rounded-md"
+                  />
+                  <FieldError />
+                </TextField>
+
                 <DatePicker className="w-full" name="date">
                   <Label>Last Donation Date</Label>
                   <DateField.Group fullWidth>
@@ -616,13 +638,13 @@ const AddDonorPage = () => {
                 <Button
                   type="submit"
                   isDisabled={isSubmitting}
-                  className="h-10 w-full rounded-md bg-blue-600 font-semibold text-white hover:bg-blue-700 sm:w-auto sm:flex-1"
+                  className="h-10 w-full rounded-md bg-red-600 font-semibold text-white hover:bg-blue-700 sm:w-auto sm:flex-1"
                 >
                   {isSubmitting ? "Saving..." : "Save Donor Info"}
                 </Button>
                 <Button
                   type="reset"
-                  variant="secondary"
+                  variant="outline"
                   className="h-10 w-full rounded-md font-semibold sm:w-auto"
                   onPress={() => {
                     setImagePreview(null);
