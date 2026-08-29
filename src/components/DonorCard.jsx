@@ -3,6 +3,7 @@
 import { Card } from "@heroui/react";
 import { Award, Heart, Phone } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ShareDonor } from "./ShareDonor";
 
@@ -39,6 +40,7 @@ function getDonationTier(count) {
 }
 
 export function DonorCard({ allBloods }) {
+  const router = useRouter();
   const [favorites, setFavorites] = useState([]);
 
   useEffect(() => {
@@ -80,17 +82,25 @@ export function DonorCard({ allBloods }) {
         const daysSinceDonation = calculateDaysSinceDonation(allBlood.date);
         const totalDonations = allBlood.totalDonations ?? 0;
         const tier = getDonationTier(totalDonations);
+        const detailsHref = `/donor/${allBlood._id}`;
 
         return (
           <Card
             key={allBlood._id}
+            role="link"
+            tabIndex={0}
+            onClick={() => router.push(detailsHref)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                router.push(detailsHref);
+              }
+            }}
             className="flex h-full w-full flex-col items-stretch overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 hover:-translate-y-1 cursor-pointer"
           >
-            {/* Clicking the image opens the donor's details page */}
-            <a
-              href={`/donor/${allBlood._id}`}
-              className="relative h-[250px] sm:h-[220px] md:h-[200px] w-full shrink-0 bg-zinc-50 overflow-hidden block"
-            >
+            {/* পুরো কার্ডেই ক্লিক করলে details page-এ যায় (উপরের onClick),
+                তাই এই ইমেজ wrapper-টা আর <a> না — শুধু <div>। */}
+            <div className="relative h-[250px] sm:h-[220px] md:h-[200px] w-full shrink-0 bg-zinc-50 overflow-hidden block">
               <Image
                 src={donorImage}
                 alt={allBlood.name || "Donor"}
@@ -129,16 +139,14 @@ export function DonorCard({ allBloods }) {
                   }`}
                 />
               </button>
-            </a>
+            </div>
 
             <div className="flex flex-1 flex-col px-3.5 py-2">
               <div className="flex items-start justify-between gap-1 mb-0.5">
                 <div>
-                  <a href={`/donor/${allBlood._id}`}>
-                    <h3 className="flex-1 font-bold text-base leading-tight hover:underline">
-                      {allBlood.name}
-                    </h3>
-                  </a>
+                  <h3 className="flex-1 font-bold text-base leading-tight">
+                    {allBlood.name}
+                  </h3>
                   <p className="text-[14px] font-medium text-gray-600 mb-1.5">
                     {allBlood.location}
                   </p>
@@ -168,13 +176,16 @@ export function DonorCard({ allBloods }) {
               <div className="relative flex w-full items-center gap-2">
                 <a
                   href={`tel:${allBlood.mobile}`}
+                  onClick={(e) => e.stopPropagation()}
                   className="inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-red-600 px-3 py-2.5 text-sm font-bold text-white transition-all duration-200 hover:bg-red-700 hover:shadow-lg shadow-md active:scale-95"
                 >
                   <Phone className="h-4 w-4" />
                   {allBlood.mobile}
                 </a>
 
-                <ShareDonor donor={allBlood} />
+                <div onClick={(e) => e.stopPropagation()}>
+                  <ShareDonor donor={allBlood} />
+                </div>
               </div>
             </div>
           </Card>

@@ -16,6 +16,7 @@ import {
   TextArea,
   TextField,
 } from "@heroui/react";
+import { Droplet } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -197,34 +198,14 @@ const AddDonorPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-white px-4 py-4 sm:py-6">
+    <div className="min-h-screen w-full bg-zinc-50 px-4 py-4 dark:bg-black sm:py-6">
       <div className="mx-auto w-full max-w-md">
         <div className="mb-4 text-center">
-          <div className="mb-2 inline-flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              className="h-9 w-8.5 text-red-600"
-            >
-              <path
-                d="M12 2C12 2 5 10.5 5 15a7 7 0 0114 0c0-4.5-7-13-7-13z"
-                fill="currentColor"
-              />
-            </svg>
+          <div className="mb-2 inline-flex h-12 w-12 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/40">
+            <Droplet className="h-6 w-6 text-red-600" fill="currentColor" />
           </div>
-          <h1 className="text-2xl font-bold text-zinc-900 sm:text-3xl">
-            Become{" "}
-            <span
-              className="text-2xl sm:text-3xl font-black tracking-widest uppercase select-none
-           bg-gradient-to-b from-red-500 via-red-700 to-black 
-           bg-clip-text text-transparent 
-           drop-shadow-[0_0_15px_rgba(220,38,38,0.8)]
-           transition-all duration-300
-           inline-block animate-[spin_1s_linear_5]"
-            >
-              a
-            </span>{" "}
-            Blood Donor
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 sm:text-3xl">
+            Become a Blood Donor
           </h1>
           <p className="mt-1 text-sm text-zinc-500">
             Every detail helps save a life faster.
@@ -232,15 +213,15 @@ const AddDonorPage = () => {
         </div>
 
         {error && (
-          <div className="mb-3 rounded-lg border border-red-100 bg-red-50 px-4 py-2 text-sm text-red-700">
+          <div className="mb-3 rounded-lg border border-red-100 bg-red-50 px-4 py-2 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300">
             {error}
           </div>
         )}
 
-        <div className="w-full rounded-lg border border-gray-200 bg-white p-6 sm:p-6 shadow-sm">
+        <div className="w-full rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:p-6">
           <Form onSubmit={donorHandler} className="w-full">
             <Fieldset className="w-full">
-              <Fieldset.Legend className="text-center text-lg font-semibold text-zinc-900">
+              <Fieldset.Legend className="text-center text-lg font-semibold text-zinc-900 dark:text-zinc-100">
                 Your Information
               </Fieldset.Legend>
               <Description className="mb-4 mt-1 text-center text-sm text-zinc-500">
@@ -248,9 +229,9 @@ const AddDonorPage = () => {
               </Description>
 
               <FieldGroup className="w-full gap-3">
-                {/* Photo upload field */}
-                <div className="flex w-full flex-col items-center gap-1 pb-2 border-b border-gray-100">
-                  <div className="h-24 w-24 overflow-hidden rounded-full border border-gray-200 bg-gray-50">
+                {/* Photo upload field — single-line, compact */}
+                <div className="flex w-full items-center gap-3 border-b border-zinc-100 pb-3 dark:border-zinc-800">
+                  <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full border border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
                     {imagePreview ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -259,18 +240,23 @@ const AddDonorPage = () => {
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
+                      <div className="flex h-full w-full items-center justify-center text-[10px] text-zinc-400">
                         No photo
                       </div>
                     )}
                   </div>
 
-                  <label
-                    htmlFor="donorImage"
-                    className="cursor-pointer rounded-md border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                  >
-                    {imagePreview ? "Change Photo" : "Upload Photo"}
-                  </label>
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <label
+                      htmlFor="donorImage"
+                      className="w-fit cursor-pointer rounded-md border border-zinc-200 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-900"
+                    >
+                      {imagePreview ? "Change Photo" : "Upload Photo"}
+                    </label>
+                    <p className="truncate text-xs text-zinc-400">
+                      Optional, max 2MB (JPG, PNG)
+                    </p>
+                  </div>
                   <input
                     id="donorImage"
                     name="imageFile"
@@ -279,13 +265,10 @@ const AddDonorPage = () => {
                     onChange={handleImageChange}
                     className="hidden"
                   />
-                  <p className="text-xs text-gray-400">
-                    Optional, max 2MB (JPG, PNG)
-                  </p>
                 </div>
 
                 <TextField isRequired name="name" className="w-full">
-                  <Label className="text-sm font-medium text-zinc-700">
+                  <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                     Name
                   </Label>
                   <Input
@@ -296,7 +279,7 @@ const AddDonorPage = () => {
                 </TextField>
 
                 <TextField name="email" type="email" className="w-full">
-                  <Label className="text-sm font-medium text-zinc-700">
+                  <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                     Email
                   </Label>
                   <Input
@@ -313,7 +296,7 @@ const AddDonorPage = () => {
                     type="tel"
                     className="w-full"
                   >
-                    <Label className="text-sm font-medium text-zinc-700">
+                    <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                       Mobile Number
                     </Label>
                     <Input
@@ -324,7 +307,7 @@ const AddDonorPage = () => {
                   </TextField>
 
                   <TextField name="mobile2" type="tel" className="w-full">
-                    <Label className="text-sm font-medium text-zinc-700">
+                    <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                       Alternative Number
                     </Label>
                     <Input
@@ -341,7 +324,7 @@ const AddDonorPage = () => {
                   placeholder="Select blood group"
                   className="w-full"
                 >
-                  <Label className="text-sm font-medium text-zinc-700">
+                  <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                     Blood Group
                   </Label>
                   <Select.Trigger className="h-10 w-full rounded-md">
@@ -395,7 +378,7 @@ const AddDonorPage = () => {
                   selectedKey={district}
                   onSelectionChange={handleDistrictChange}
                 >
-                  <Label className="text-sm font-medium text-zinc-700">
+                  <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                     District
                   </Label>
                   <Select.Trigger className="h-10 w-full rounded-md">
@@ -421,7 +404,7 @@ const AddDonorPage = () => {
                     placeholder="Loading..."
                     className="w-full"
                   >
-                    <Label className="text-sm font-medium text-zinc-700">
+                    <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                       Upazila
                     </Label>
                     <Select.Trigger className="h-10 w-full rounded-md">
@@ -440,7 +423,7 @@ const AddDonorPage = () => {
                     selectedKey={upazila}
                     onSelectionChange={handleUpazilaChange}
                   >
-                    <Label className="text-sm font-medium text-zinc-700">
+                    <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                       Upazila
                     </Label>
                     <Select.Trigger className="h-10 w-full rounded-md">
@@ -467,7 +450,7 @@ const AddDonorPage = () => {
                     value={customUpazila}
                     onChange={handleCustomUpazilaChange}
                   >
-                    <Label className="text-sm font-medium text-zinc-700">
+                    <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                       Upazila
                     </Label>
                     <Input
@@ -488,7 +471,7 @@ const AddDonorPage = () => {
                     placeholder="Loading..."
                     className="w-full"
                   >
-                    <Label className="text-sm font-medium text-zinc-700">
+                    <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                       Union
                     </Label>
                     <Select.Trigger className="h-10 w-full rounded-md">
@@ -509,7 +492,7 @@ const AddDonorPage = () => {
                     selectedKey={union}
                     onSelectionChange={(key) => setUnion(key)}
                   >
-                    <Label className="text-sm font-medium text-zinc-700">
+                    <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                       Union
                     </Label>
                     <Select.Trigger className="h-10 w-full rounded-md">
@@ -536,7 +519,7 @@ const AddDonorPage = () => {
                     value={customArea}
                     onChange={setCustomArea}
                   >
-                    <Label className="text-sm font-medium text-zinc-700">
+                    <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                       Area
                     </Label>
                     <Input
@@ -552,7 +535,7 @@ const AddDonorPage = () => {
                 )}
 
                 <TextField name="BloodBankName" type="text" className="w-full">
-                  <Label className="text-sm font-medium text-zinc-700">
+                  <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                     Your Blood Bank
                   </Label>
                   <Input
@@ -567,7 +550,7 @@ const AddDonorPage = () => {
                   type="number"
                   className="w-full"
                 >
-                  <Label className="text-sm font-medium text-zinc-700">
+                  <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                     Total Blood Donation
                   </Label>
                   <Input
@@ -580,7 +563,9 @@ const AddDonorPage = () => {
                 </TextField>
 
                 <DatePicker className="w-full" name="date">
-                  <Label>Last Donation Date</Label>
+                  <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    Last Donation Date
+                  </Label>
                   <DateField.Group fullWidth>
                     <DateField.Input>
                       {(segment) => <DateField.Segment segment={segment} />}
@@ -623,7 +608,7 @@ const AddDonorPage = () => {
                 </DatePicker>
 
                 <TextField name="bio" className="w-full">
-                  <Label className="text-sm font-medium text-zinc-700">
+                  <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                     Bio
                   </Label>
                   <TextArea
@@ -638,7 +623,7 @@ const AddDonorPage = () => {
                 <Button
                   type="submit"
                   isDisabled={isSubmitting}
-                  className="h-10 w-full rounded-md bg-red-600 font-semibold text-white hover:bg-blue-700 sm:w-auto sm:flex-1"
+                  className="h-10 w-full rounded-md bg-red-600 font-semibold text-white hover:bg-red-700 sm:w-auto sm:flex-1"
                 >
                   {isSubmitting ? "Saving..." : "Save Donor Info"}
                 </Button>
