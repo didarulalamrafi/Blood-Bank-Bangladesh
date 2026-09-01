@@ -13,6 +13,7 @@ import {
   PhoneCall,
 } from "lucide-react";
 import { ShareDonor } from "@/components/ShareDonor";
+import { getDonationTier } from "@/lib/donationTiers";
 
 const FALLBACK_IMAGE =
   "https://i.ibb.co/LXR28brz/Gemini-Generated-Image-qjg53tqjg53tqjg5.png";
@@ -85,6 +86,8 @@ export default async function DonorDetailsPage({ params }) {
   if (!donor) notFound();
 
   const donorImage = donor.image || FALLBACK_IMAGE;
+  const totalDonations = donor.totalDonations ?? 0;
+  const tier = getDonationTier(totalDonations);
 
   const daysSinceDonation = donor.date
     ? Math.ceil(
@@ -132,6 +135,16 @@ export default async function DonorDetailsPage({ params }) {
               className="h-auto max-h-[70vh] w-full object-contain"
               unoptimized={donorImage.startsWith("data:")}
             />
+
+            {/* Donation tier badge - top left, same as DonorCard */}
+            {tier && (
+              <div
+                className={`absolute left-3 top-3 flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold text-white shadow-md ${tier.className}`}
+              >
+                <Award className="h-3.5 w-3.5" />
+                {tier.label}
+              </div>
+            )}
           </div>
 
           {/* Details */}
@@ -164,7 +177,7 @@ export default async function DonorDetailsPage({ params }) {
 
               <span className="flex items-center gap-1 rounded-full bg-zinc-50 px-3 py-1 text-xs font-semibold text-zinc-700 ring-1 ring-inset ring-zinc-200 sm:text-sm">
                 <Award className="h-3.5 w-3.5 text-red-600" />
-                {donor.totalDonations ?? 0} donations
+                {totalDonations} donations
               </span>
             </div>
 

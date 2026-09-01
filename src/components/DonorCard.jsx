@@ -6,38 +6,11 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ShareDonor } from "./ShareDonor";
+import { getDonationTier } from "@/lib/donationTiers";
 
 const STORAGE_KEY = "favoriteDonors";
 const FALLBACK_IMAGE =
   "https://i.ibb.co/LXR28brz/Gemini-Generated-Image-qjg53tqjg53tqjg5.png";
-
-// Donation-count based badge tiers. Adjust thresholds/labels here if needed.
-const DONATION_TIERS = [
-  {
-    min: 20,
-    label: "Diamond",
-    className: "bg-gradient-to-r from-cyan-400 via-sky-500 to-indigo-600",
-  },
-  {
-    min: 15,
-    label: "Platinum",
-    className: "bg-gradient-to-r from-slate-300 via-slate-400 to-slate-500",
-  },
-  {
-    min: 10,
-    label: "Gold",
-    className: "bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600",
-  },
-  {
-    min: 5,
-    label: "Silver",
-    className: "bg-gradient-to-r from-gray-300 via-gray-400 to-gray-500",
-  },
-];
-
-function getDonationTier(count) {
-  return DONATION_TIERS.find((tier) => count >= tier.min) || null;
-}
 
 export function DonorCard({ allBloods }) {
   const router = useRouter();

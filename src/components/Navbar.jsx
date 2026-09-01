@@ -11,6 +11,16 @@
  *    (LayoutDashboard আইকন, href="/dashboard")। এটা মোবাইল বটম
  *    বার, মোবাইল টপ বারের আইকন, আর ডেস্কটপ nav — তিন জায়গাতেই
  *    প্রযোজ্য। useSession() দিয়ে session state পড়া হয়েছে।
+ * ০.১ 🩹 HYDRATION FIX: SSR-এ session data থাকে না, তাই সার্ভার
+ *    সবসময় "Login" রেন্ডার করে। কিন্তু client hydrate হওয়ার সময়
+ *    Better Auth-এর session সাথে সাথেই (cached/cookie থেকে)
+ *    পাওয়া গেলে প্রথম client render-ই "Dashboard" দেখাত — যেটা
+ *    সার্ভারের সাথে না মিলে hydration mismatch তৈরি করত। এখন
+ *    একটা `mounted` গার্ড বসানো হয়েছে (dark-mode হুকের প্যাটার্নেই):
+ *    যতক্ষণ না component client-এ mount হয়ে গেছে, ততক্ষণ জোর করে
+ *    "Login" (SSR-এর মতোই) দেখানো হয়, mount হওয়ার পরই useEffect
+ *    থেকে আসল session অনুযায়ী বদলায়। ফলে প্রথম client render
+ *    সবসময় server render-এর সাথে মেলে, hydration mismatch হয় না।
  * ১. 🧱 Z-INDEX FIX: বটম বার, ভিতরের nav, আর Search FAB — সবগুলোর
  *    z-index অনেক উঁচু (999999 / 1000000) করে দেওয়া হয়েছে, যাতে
  *    কোনো থার্ড-পার্টি চ্যাট/সাপোর্ট widget bubble এর উপরে বসে
@@ -54,6 +64,10 @@ const LEFT_ITEMS = [
   { href: "/all", label: "Donor", icon: Users },
 ];
 
+// SSR এবং client-এর প্রথম render — দুই জায়গাতেই এই একই "logged out"
+// ট্যাব দেখানো হয়, যাতে হাইড্রেশন সবসময় মিলে যায়।
+const LOGGED_OUT_TAB = { href: "/login", label: "Login", icon: LogIn };
+
 // ---------- Dark mode হুক: html.dark ক্লাস টগল + localStorage-এ persist ----------
 function getInitialIsDark() {
   if (typeof window === "undefined") return false; // SSR guard
@@ -91,10 +105,20 @@ export default function SmartNavbar() {
   const pathname = usePathname();
   const { data: session } = useSession();
 
+  // 🩹 HYDRATION FIX: component client-এ mount হওয়ার আগ পর্যন্ত
+  // (অর্থাৎ প্রথম client render-এ, যেটা SSR output-এর সাথে মেলাতে হবে)
+  // session যাই হোক না কেন সবসময় LOGGED_OUT_TAB ধরা হয়। mount হওয়ার
+  // পর (useEffect চলার পর) আসল session অনুযায়ী ট্যাব বদলায়।
+  const [authMounted, setAuthMounted] = useState(false);
+  useEffect(() => {
+    setAuthMounted(true);
+  }, []);
+
   // লগইন থাকলে Dashboard, না থাকলে Login — href/label/icon সব একসাথে ঠিক হচ্ছে
-  const authTab = session?.user
-    ? { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }
-    : { href: "/login", label: "Login", icon: LogIn };
+  const authTab =
+    authMounted && session?.user
+      ? { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }
+      : LOGGED_OUT_TAB;
 
   const RIGHT_ITEMS = [
     { href: "/favourite", label: "Favourite", icon: Heart },
