@@ -5,6 +5,12 @@
  * SmartNavbar — Scroll-Hide Top Bar + Search-FAB Bottom Bar + Dark Mode
  * ==============================================================
  * এই আপডেটে যা বদলেছে:
+ * ০. 🔐 ABOUT → LOGIN/DASHBOARD: "About" ট্যাবের জায়গায় এখন
+ *    session-aware লিংক বসেছে — লগইন করা না থাকলে "Login"
+ *    (LogIn আইকন, href="/login"), লগইন করা থাকলে "Dashboard"
+ *    (LayoutDashboard আইকন, href="/dashboard")। এটা মোবাইল বটম
+ *    বার, মোবাইল টপ বারের আইকন, আর ডেস্কটপ nav — তিন জায়গাতেই
+ *    প্রযোজ্য। useSession() দিয়ে session state পড়া হয়েছে।
  * ১. 🧱 Z-INDEX FIX: বটম বার, ভিতরের nav, আর Search FAB — সবগুলোর
  *    z-index অনেক উঁচু (999999 / 1000000) করে দেওয়া হয়েছে, যাতে
  *    কোনো থার্ড-পার্টি চ্যাট/সাপোর্ট widget bubble এর উপরে বসে
@@ -31,28 +37,21 @@ import {
   Plus,
   Home,
   Users,
-  Info,
-  Search,
+  LogIn,
+  LayoutDashboard,
   Sun,
   Moon,
 } from "lucide-react";
+import { useSession } from "@/lib/auth-client";
 
 const FAB_HREF = "/add"; // ← মাঝের raised FAB এখন Add-এ পয়েন্ট করে
 
-// বটম বার — বাম দুইটা, মাঝে FAB (Add), ডান দুইটা
+// বটম বার — বাম দুইটা স্থির, ডান দুইটার একটা স্থির (Favourite) আর
+// একটা session-aware (Login/Dashboard) — তাই RIGHT_ITEMS আর মডিউল
+// স্কোপে static থাকছে না, কম্পোনেন্টের ভেতরে বানানো হচ্ছে।
 const LEFT_ITEMS = [
   { href: "/", label: "Home", icon: Home },
   { href: "/all", label: "Donor", icon: Users },
-];
-const RIGHT_ITEMS = [
-  { href: "/favourite", label: "Favourite", icon: Heart },
-  { href: "/about", label: "About", icon: Info },
-];
-
-// ডেস্কটপ top row
-const DESKTOP_NAV_LINKS = [
-  { href: "/all", label: "Donors" },
-  { href: "/about", label: "About" },
 ];
 
 // ---------- Dark mode হুক: html.dark ক্লাস টগল + localStorage-এ persist ----------
@@ -90,8 +89,20 @@ function useDarkMode() {
 
 export default function SmartNavbar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+
+  // লগইন থাকলে Dashboard, না থাকলে Login — href/label/icon সব একসাথে ঠিক হচ্ছে
+  const authTab = session?.user
+    ? { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }
+    : { href: "/login", label: "Login", icon: LogIn };
+
+  const RIGHT_ITEMS = [
+    { href: "/favourite", label: "Favourite", icon: Heart },
+    authTab,
+  ];
+
   const isFavouriteActive = pathname === "/favourite";
-  const isAboutActive = pathname === "/about";
+  const isAuthTabActive = pathname === authTab.href;
   const isFabActive = pathname === FAB_HREF;
   const { isDark, toggle, mounted } = useDarkMode();
 
@@ -114,6 +125,12 @@ export default function SmartNavbar() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // ডেস্কটপ top row — Donors স্থির, দ্বিতীয়টা session-aware
+  const desktopNavLinks = [
+    { href: "/all", label: "Donors" },
+    { href: authTab.href, label: authTab.label },
+  ];
 
   const renderTabItem = ({ href, label, icon: Icon }) => {
     const active = href === "/" ? pathname === "/" : pathname === href;
@@ -180,9 +197,9 @@ export default function SmartNavbar() {
             </span>
           </Link>
 
-          {/* ---------- ডেস্কটপে (sm+) Donor/About row ---------- */}
+          {/* ---------- ডেস্কটপে (sm+) Donor/Login-Dashboard row ---------- */}
           <ul className="hidden items-center gap-1 sm:flex sm:gap-2">
-            {DESKTOP_NAV_LINKS.map((link) => {
+            {desktopNavLinks.map((link) => {
               const active = pathname === link.href;
               return (
                 <li key={link.href}>
@@ -208,17 +225,17 @@ export default function SmartNavbar() {
 
           {/* ---------- ডান পাশ ---------- */}
           <div className="flex items-center gap-1 sm:gap-2">
-            {/* ℹ️ About — শুধু মোবাইলে (bottom bar-এ জায়গা নেই বলে এখানে) */}
+            {/* 🔐 Login/Dashboard — শুধু মোবাইলে (bottom bar-এ জায়গা নেই বলে এখানে) */}
             <Link
-              href="/about"
-              aria-label="About"
+              href={authTab.href}
+              aria-label={authTab.label}
               className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors sm:hidden ${
-                isAboutActive
+                isAuthTabActive
                   ? "text-red-600"
                   : "text-zinc-500 hover:bg-zinc-100 hover:text-red-600 dark:hover:bg-zinc-800"
               }`}
             >
-              <Info className="h-5 w-5" />
+              <authTab.icon className="h-5 w-5" />
             </Link>
 
             {/* 🌗 Dark / Light টগল — সবসময় visible (মোবাইল + ডেস্কটপ) */}
@@ -286,7 +303,7 @@ export default function SmartNavbar() {
         }}
       >
         <div className="relative">
-          {/* ৫-কলাম grid: Home | Donor | (Add FAB-এর জন্য ফাঁকা) | Search | About
+          {/* ৫-কলাম grid: Home | Donor | (Add FAB-এর জন্য ফাঁকা) | Favourite | Login/Dashboard
               — grid ব্যবহার করায় প্রতিটা কলামের width টেক্সটের length
               নির্বিশেষে ঠিক সমান থাকে, তাই "Home" কিনারায় চেপে যাওয়া
               বা এক পাশে বেশি গ্যাপ হওয়ার সমস্যা হয় না। */}

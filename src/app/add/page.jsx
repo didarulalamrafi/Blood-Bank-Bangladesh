@@ -1,4 +1,22 @@
 "use client";
+
+/**
+ * ==============================================================
+ * Donor Profile Page (/donor/add)
+ * ==============================================================
+ * এটা আর standalone donor তৈরি করে না — logged-in user এর
+ * একাউন্টের সাথে ডোনার প্রোফাইল attach/update করে। তাই:
+ *  - Name/Email এখন session থেকে আসে (read-only display, form
+ *    field না) — একই তথ্য দুই জায়গায় রাখা এবং ডুপ্লিকেট এন্ট্রির
+ *    ঝুঁকি এড়াতে।
+ *  - সাবমিটে POST /all এর বদলে PATCH
+ *    /api/users/:id/donor-profile কল হয় (backend এ বানাতে হবে)।
+ *  - সেশন না থাকলে /login এ পাঠিয়ে দেয়।
+ *
+ * District -> Upazila -> Union ক্যাসকেডিং ফেচ লজিক অপরিবর্তিত।
+ * ==============================================================
+ */
+
 import {
   Button,
   Calendar,
@@ -19,16 +37,15 @@ import {
 import { Droplet } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
-// District -> Upazila -> Union data now lives server-side only, served
-// through /api/locations in slices (see app/api/locations/route.js).
-// This keeps the ~60KB dataset out of the client bundle entirely — the
-// browser only ever fetches the few KB it actually needs at each step.
+import { useSession } from "@/lib/auth-client";
 
 const AddDonorPage = () => {
   const router = useRouter();
+  const { data: session, isPending: sessionLoading } = useSession();
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
   const [imagePreview, setImagePreview] = useState(null);
   const [imageData, setImageData] = useState("");
@@ -45,6 +62,13 @@ const AddDonorPage = () => {
   const [unionNames, setUnionNames] = useState([]);
   const [loadingUpazilas, setLoadingUpazilas] = useState(false);
   const [loadingUnions, setLoadingUnions] = useState(false);
+
+  // Redirect unauthenticated visitors — donor profile always belongs to a user
+  useEffect(() => {
+    if (!sessionLoading && !session?.user) {
+      router.push("/login?next=/donor/add");
+    }
+  }, [sessionLoading, session, router]);
 
   // Load district list once on mount (tiny payload, ~1KB)
   useEffect(() => {
@@ -84,7 +108,6 @@ const AddDonorPage = () => {
       .finally(() => setLoadingUnions(false));
   }, [district, upazila]);
 
-  // Check if upazila and union lists exist
   const hasUpazilaList = upazilaNames.length > 0;
   const hasUnionList = unionNames.length > 0;
 
@@ -141,9 +164,12 @@ const AddDonorPage = () => {
     e.preventDefault();
     setError("");
 
-    // Get the actual upazila value (from select or custom input)
+    if (!session?.user?.id) {
+      setError("আপনার সেশন খুঁজে পাওয়া যায়নি, আবার লগইন করুন।");
+      return;
+    }
+
     const upazilaValue = upazila || customUpazila;
-    // Get the actual union/area value (from select or custom input)
     const areaValue = union || customArea;
 
     if (!district || !upazilaValue || !areaValue) {
@@ -163,7 +189,6 @@ const AddDonorPage = () => {
       .filter(Boolean)
       .join(", ");
 
-    // Ensure total donations is stored as a number, defaulting to 0
     bloodInfo.totalDonations = bloodInfo.totalDonations
       ? Number(bloodInfo.totalDonations)
       : 0;
@@ -173,19 +198,20 @@ const AddDonorPage = () => {
     }
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/all`, {
-        method: "POST",
+      const res = await fetch(`/api/users/${session.user.id}/donor-profile`, {
+        method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(bloodInfo),
       });
 
       if (!res.ok) throw new Error("Server error, please try again");
 
-      const addDonor = await res.json();
+      const updated = await res.json();
 
-      if (addDonor.acknowledged) {
+      if (updated.acknowledged || updated.success) {
+        setSuccess(true);
         router.refresh();
-        router.push("/all");
+        setTimeout(() => router.push("/dashboard"), 1200);
       } else {
         setError("Something went wrong. Please try again.");
       }
@@ -196,6 +222,18 @@ const AddDonorPage = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (sessionLoading) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-zinc-50 dark:bg-black">
+        <p className="text-sm text-zinc-400">লোড হচ্ছে...</p>
+      </div>
+    );
+  }
+
+  if (!session?.user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen w-full bg-zinc-50 px-4 py-4 dark:bg-black sm:py-6">
@@ -212,9 +250,30 @@ const AddDonorPage = () => {
           </p>
         </div>
 
+        {/* Signed-in account, shown read-only — kept in sync with the user record */}
+        <div className="mb-3 flex items-center gap-3 rounded-lg border border-zinc-200 bg-white px-4 py-2.5 dark:border-zinc-800 dark:bg-zinc-950">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-red-50 text-sm font-semibold text-red-600 dark:bg-red-950/40">
+            {session.user.name?.[0]?.toUpperCase() || "?"}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
+              {session.user.name}
+            </p>
+            <p className="truncate text-xs text-zinc-500">
+              {session.user.email}
+            </p>
+          </div>
+        </div>
+
         {error && (
           <div className="mb-3 rounded-lg border border-red-100 bg-red-50 px-4 py-2 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300">
             {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-3 rounded-lg border border-green-100 bg-green-50 px-4 py-2 text-sm text-green-700 dark:border-green-900/40 dark:bg-green-950/30 dark:text-green-300">
+            আপনার ডোনার প্রোফাইল সেভ হয়েছে। ড্যাশবোর্ডে নিয়ে যাওয়া হচ্ছে...
           </div>
         )}
 
@@ -222,7 +281,7 @@ const AddDonorPage = () => {
           <Form onSubmit={donorHandler} className="w-full">
             <Fieldset className="w-full">
               <Fieldset.Legend className="text-center text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                Your Information
+                Donor Information
               </Fieldset.Legend>
               <Description className="mb-4 mt-1 text-center text-sm text-zinc-500">
                 Please make sure all details are accurate.
@@ -266,28 +325,6 @@ const AddDonorPage = () => {
                     className="hidden"
                   />
                 </div>
-
-                <TextField isRequired name="name" className="w-full">
-                  <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                    Name
-                  </Label>
-                  <Input
-                    placeholder="Enter your name"
-                    className="h-10 w-full rounded-md"
-                  />
-                  <FieldError />
-                </TextField>
-
-                <TextField name="email" type="email" className="w-full">
-                  <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                    Email
-                  </Label>
-                  <Input
-                    placeholder="Enter your email"
-                    className="h-10 w-full rounded-md"
-                  />
-                  <FieldError />
-                </TextField>
 
                 <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
                   <TextField
