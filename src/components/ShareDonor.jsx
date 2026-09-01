@@ -121,12 +121,49 @@ export function ShareDonor({ donor, className = "" }) {
     `https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=8&data=${encodeURIComponent(data)}`;
 
   // Native Web Share API — best UX on mobile (opens the device's own share
-  // sheet). Falls back to the popover below when unsupported (mostly desktop).
+  // sheet). Tries to attach the donor's actual image as a file (Web Share
+  // API Level 2) so the receiving app shows both the photo AND the link,
+  // not just text. Falls back step by step if anything isn't supported:
+  // file-share unsupported → CORS/fetch fails → share() unsupported at all.
   const handleShareClick = async () => {
     const shareUrl = buildShareUrl();
     const shareText = buildShareText();
+    const imageUrl = donor.image;
 
-    if (typeof navigator !== "undefined" && navigator.share) {
+    const canNativeShare =
+      typeof navigator !== "undefined" && typeof navigator.share === "function";
+
+    // ধাপ ১: ছবি ফাইল হিসেবে attach করে + লিংক text-এ জুড়ে শেয়ার করার চেষ্টা।
+    // (url আর files একসাথে অনেক ব্রাউজারেই ঠিকমতো কাজ করে না, তাই লিংকটা
+    // text-এর ভেতরেই বসানো হচ্ছে — এতে receiving app-এ ছবি + লিংক দুটোই যায়)
+    if (canNativeShare && imageUrl && !imageUrl.startsWith("data:")) {
+      try {
+        const res = await fetch(imageUrl);
+        const blob = await res.blob();
+        const fileName = `${(donor.name || "donor").replace(/\s+/g, "_")}.jpg`;
+        const file = new File([blob], fileName, {
+          type: blob.type || "image/jpeg",
+        });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: donor.name,
+            text: `${shareText}\n${shareUrl}`,
+            files: [file],
+          });
+          return;
+        }
+      } catch (err) {
+        // CORS ব্যর্থ হওয়া বা ফাইল বানাতে সমস্যা হলে নিচের সাধারণ শেয়ারে চলে যাবে
+        console.warn(
+          "Image file share failed, falling back to link-only:",
+          err,
+        );
+      }
+    }
+
+    // ধাপ ২: শুধু title/text/url দিয়ে সাধারণ native share (আগের মতোই)
+    if (canNativeShare) {
       try {
         await navigator.share({
           title: donor.name,
@@ -141,6 +178,7 @@ export function ShareDonor({ donor, className = "" }) {
       return;
     }
 
+    // ধাপ ৩: native share একদমই সাপোর্ট না করলে popover মেনু খোলা (ডেস্কটপে)
     setOpen((prev) => !prev);
   };
 
